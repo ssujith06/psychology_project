@@ -1,14 +1,20 @@
+import os
+import sys
 import subprocess
 
-# Force install nltk if not installed
+# Ensure correct Python path is used
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+# Install nltk if not found
 try:
     import nltk
 except ModuleNotFoundError:
-    subprocess.run(["pip", "install", "nltk"], check=True)
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "nltk"])
     import nltk
 
 # Download required NLTK data
 nltk.download('vader_lexicon')
+
 import streamlit as st
 from chatbot import get_response
 
