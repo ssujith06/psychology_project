@@ -1,3 +1,5 @@
+import nltk
+nltk.download('vader_lexicon')  # This is needed for sentiment analysis
 import random
 import nltk
 from nltk.sentiment import SentimentIntensityAnalyzer
