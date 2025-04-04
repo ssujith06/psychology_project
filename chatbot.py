@@ -1,49 +1,43 @@
 import streamlit as st
 
-# Ensure session state is initialized before accessing it
-if "messages" not in st.session_state:
-    st.session_state.messages = []  # Initialize chat history
+def chatbot():
+    st.title("🧠 Psychology Chatbot")
+    st.write("Hi there! I'm your friendly mental health companion. Let's talk 😊")
 
-def chatbot_response(text):
+    # ✅ Initialize session state
+    if 'messages' not in st.session_state:
+        st.session_state.messages = []
+
+    # ✅ Manual intent-response pairs (you can expand this!)
     responses = {
-        "hello": "Hey there! How can I cheer you up today? 😊",
-        "sad": "It's okay to feel sad. Want to talk about it? 💙",
-        "stress": "Take a deep breath. Everything will be okay! 🌿",
-        "joke": "Why did the student eat his homework? Because his teacher said it was a piece of cake! 😂",
-        "bye": "Goodbye! Stay positive! 😊"
+        "hi": "Hey! How can I support you today?",
+        "hello": "Hello there! How are you feeling today?",
+        "i feel sad": "I'm really sorry to hear that. Want to talk about it?",
+        "i'm anxious": "That’s totally okay. Try taking a few deep breaths. I’m here for you.",
+        "thank you": "You're always welcome!",
+        "bye": "Take care! I'm always here if you need someone to talk to."
     }
 
-    for key in responses.keys():
-        if key in text:
-            return responses[key]
+    # ✅ User input area
+    user_input = st.text_input("You:", key="user_input")
 
-    return "I'm here to listen. Tell me more. 🤗"
+    if user_input:
+        # Save user message
+        st.session_state.messages.append(("user", user_input))
 
-def chatbot():
-    st.title("🛏️ Hostel Management System")
-    st.subheader("💬 Mental Health Chatbot")
+        # Find response (case-insensitive)
+        lower_input = user_input.lower()
+        bot_reply = responses.get(lower_input, "I'm not sure how to respond to that, but I'm here to listen!")
 
-    # Display chat history
-    for msg in st.session_state.messages:
-        if msg["role"] == "user":
-            st.markdown(f"👤 **You:** {msg['content']}")
+        # Save bot reply
+        st.session_state.messages.append(("bot", bot_reply))
+
+        # Clear input field
+        st.session_state.user_input = ""
+
+    # ✅ Display chat history
+    for sender, msg in st.session_state.messages:
+        if sender == "user":
+            st.markdown(f"**You:** {msg}")
         else:
-            st.markdown(f"🤖 **Bot:** {msg['content']}")
-
-    user_input = st.text_input("Type your message:", key="chat_input")
-
-    if st.button("Send") and user_input.strip():
-        # Save user's message
-        st.session_state.messages.append({"role": "user", "content": user_input})
-
-        # Get bot's response
-        response = chatbot_response(user_input.lower())
-
-        # Save bot's response
-        st.session_state.messages.append({"role": "bot", "content": response})
-
-        # Refresh the chat UI
-        st.experimental_rerun()
-
-if __name__ == "__main__":
-    chatbot()
+            st.markdown(f"**PsychBot:** {msg}")
