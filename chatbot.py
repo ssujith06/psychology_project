@@ -1,94 +1,60 @@
 import streamlit as st
-import re
 
-# Helper: Simple sentiment awareness
-def detect_sentiment(user_input):
-    if re.search(r'\b(suicidal|hopeless|worthless)\b', user_input):
-        return "crisis"
-    elif re.search(r'\b(sad|anxious|depressed|tired|lonely)\b', user_input):
-        return "negative"
-    elif re.search(r'\b(happy|grateful|okay|better)\b', user_input):
-        return "positive"
-    else:
-        return "neutral"
+# Define intents and responses
+intents = {
+    "greeting": {
+        "patterns": ["hi", "hello", "hey", "good morning", "good evening"],
+        "responses": ["Hello! How can I assist you today?", "Hi there! What can I do for you?", "Hey! How can I help?"]
+    },
+    "goodbye": {
+        "patterns": ["bye", "goodbye", "see you", "take care"],
+        "responses": ["Goodbye! Have a great day!", "See you later!", "Take care!"]
+    },
+    "thanks": {
+        "patterns": ["thanks", "thank you", "appreciate it"],
+        "responses": ["You're welcome!", "No problem!", "Glad to help!"]
+    },
+    "help": {
+        "patterns": ["help", "support", "assist"],
+        "responses": ["Sure! What do you need help with?", "I'm here to assist you!"]
+    },
+    "default": {
+        "responses": ["I'm sorry, I didn't understand that.", "Could you please rephrase?", "I'm not sure how to respond to that."]
+    }
+}
 
-# Helper: Generate bot response
-def generate_response(user_input):
+def get_response(user_input):
+    """Get a response based on user input."""
     user_input = user_input.lower()
+    for intent, data in intents.items():
+        if any(pattern in user_input for pattern in data["patterns"]):
+            return st.session_state.chat_history.append(f"Bot: {st.session_state.chat_history.append(data['responses'][0])}")
+    return intents["default"]["responses"][0]
 
-    # Sentiment detection
-    sentiment = detect_sentiment(user_input)
-
-    if sentiment == "crisis":
-        return ("I'm really concerned about your safety. "
-                "Please consider contacting a professional or reaching out to a crisis line immediately. "
-                "[Click here for help](https://findahelpline.com/)")
-
-    # Intent matching
-    if re.search(r'\bstress(ed)?\b', user_input):
-        return "Stress is tough. Would you like a few strategies to cope?"
-    elif re.search(r'\banxiety\b|\bpanic\b', user_input):
-        return "Anxiety can be draining. Grounding exercises might help. Want to try one together?"
-    elif re.search(r'\bsleep\b|\binsomnia\b', user_input):
-        return "I can suggest a bedtime routine or a simple breathing exercise to help with sleep. Interested?"
-    elif re.search(r'\bsad\b|\blonely\b|\bdepressed\b', user_input):
-        return "You’re not alone. I’m here for you. Want to talk more or try a mood-lifting activity?"
-    elif re.search(r'\b(breathing|relax|calm|cope)\b', user_input):
-        return "Let's take a moment. Inhale for 4 seconds, hold for 4, exhale for 4. Repeat a few times with me."
-    else:
-        return "I'm listening. Tell me more about what's on your mind."
-
-# Optional suggestions
-def show_coping_strategies():
-    with st.expander("💡 Coping Strategies"):
-        st.markdown("""
-        - Try journaling your thoughts.
-        - Take a short walk in fresh air.
-        - Do 5-minute guided meditation.
-        - Limit social media when overwhelmed.
-        - Talk to someone you trust.
-        """)
-
-def show_relaxation_exercises():
-    with st.expander("🧘 Breathing Exercise"):
-        st.markdown("""
-        - **Box Breathing**: Inhale 4s → Hold 4s → Exhale 4s → Hold 4s.
-        - Do this for 2–3 minutes to calm your body.
-        - [Try it here](https://www.youtube.com/watch?v=YFdZXwE6fRE)
-        """)
-
-# Main chatbot function
-def chatbot():
-    st.title("🧠 Therabot – Your Mental Health Companion")
-
-    # Session state init
-    if 'chat_history' not in st.session_state:
-        st.session_state.chat_history = []
+def main():
+    # Initialize session state variables if they don't exist
     if 'user_input' not in st.session_state:
         st.session_state.user_input = ""
-
-    # Input
-    user_input = st.text_input("You:", key="user_input")
-
-    # Handle user message
-    if user_input:
-        st.session_state.chat_history.append(("You", user_input))
-
-        # Bot response
-        bot_response = generate_response(user_input)
-        st.session_state.chat_history.append(("Therabot", bot_response))
-        st.session_state.user_input = ""
-
-    # Chat display
-    st.write("### 💬 Conversation")
-    for sender, message in st.session_state.chat_history:
-        st.markdown(f"**{sender}:** {message}")
-
-    # Extra support sections
-    st.divider()
-    show_coping_strategies()
-    show_relaxation_exercises()
-
-    # Reset button
-    if st.button("🗑️ Reset Conversation"):
+    if 'chat_history' not in st.session_state:
         st.session_state.chat_history = []
+
+    # Streamlit app layout
+    st.title("Simple Rule-Based Chatbot")
+    st.write("Chat History:")
+    for chat in st.session_state.chat_history:
+        st.write(chat)
+
+    # User input
+    user_input = st.text_input("You:", value=st.session_state.user_input)
+
+    if st.button("Send"):
+        # Store user input in session state
+        st.session_state.chat_history.append(f"You: {user_input}")
+        st.session_state.user_input = ""  # Clear input after sending
+
+        # Get chatbot response
+        response = get_response(user_input)
+        st.session_state.chat_history.append(f"Bot: {response}")
+
+if __name__ == "__main__":
+    main()
