@@ -1,43 +1,94 @@
 import streamlit as st
+import re
 
+# Helper: Simple sentiment awareness
+def detect_sentiment(user_input):
+    if re.search(r'\b(suicidal|hopeless|worthless)\b', user_input):
+        return "crisis"
+    elif re.search(r'\b(sad|anxious|depressed|tired|lonely)\b', user_input):
+        return "negative"
+    elif re.search(r'\b(happy|grateful|okay|better)\b', user_input):
+        return "positive"
+    else:
+        return "neutral"
+
+# Helper: Generate bot response
+def generate_response(user_input):
+    user_input = user_input.lower()
+
+    # Sentiment detection
+    sentiment = detect_sentiment(user_input)
+
+    if sentiment == "crisis":
+        return ("I'm really concerned about your safety. "
+                "Please consider contacting a professional or reaching out to a crisis line immediately. "
+                "[Click here for help](https://findahelpline.com/)")
+
+    # Intent matching
+    if re.search(r'\bstress(ed)?\b', user_input):
+        return "Stress is tough. Would you like a few strategies to cope?"
+    elif re.search(r'\banxiety\b|\bpanic\b', user_input):
+        return "Anxiety can be draining. Grounding exercises might help. Want to try one together?"
+    elif re.search(r'\bsleep\b|\binsomnia\b', user_input):
+        return "I can suggest a bedtime routine or a simple breathing exercise to help with sleep. Interested?"
+    elif re.search(r'\bsad\b|\blonely\b|\bdepressed\b', user_input):
+        return "You’re not alone. I’m here for you. Want to talk more or try a mood-lifting activity?"
+    elif re.search(r'\b(breathing|relax|calm|cope)\b', user_input):
+        return "Let's take a moment. Inhale for 4 seconds, hold for 4, exhale for 4. Repeat a few times with me."
+    else:
+        return "I'm listening. Tell me more about what's on your mind."
+
+# Optional suggestions
+def show_coping_strategies():
+    with st.expander("💡 Coping Strategies"):
+        st.markdown("""
+        - Try journaling your thoughts.
+        - Take a short walk in fresh air.
+        - Do 5-minute guided meditation.
+        - Limit social media when overwhelmed.
+        - Talk to someone you trust.
+        """)
+
+def show_relaxation_exercises():
+    with st.expander("🧘 Breathing Exercise"):
+        st.markdown("""
+        - **Box Breathing**: Inhale 4s → Hold 4s → Exhale 4s → Hold 4s.
+        - Do this for 2–3 minutes to calm your body.
+        - [Try it here](https://www.youtube.com/watch?v=YFdZXwE6fRE)
+        """)
+
+# Main chatbot function
 def chatbot():
-    st.title("🧠 Psychology Chatbot")
-    st.write("Hi there! I'm your friendly mental health companion. Let's talk 😊")
+    st.title("🧠 Therabot – Your Mental Health Companion")
 
-    # ✅ Initialize session state
-    if 'messages' not in st.session_state:
-        st.session_state.messages = []
-
-    # ✅ Manual intent-response pairs (you can expand this!)
-    responses = {
-        "hi": "Hey! How can I support you today?",
-        "hello": "Hello there! How are you feeling today?",
-        "i feel sad": "I'm really sorry to hear that. Want to talk about it?",
-        "i'm anxious": "That’s totally okay. Try taking a few deep breaths. I’m here for you.",
-        "thank you": "You're always welcome!",
-        "bye": "Take care! I'm always here if you need someone to talk to."
-    }
-
-    # ✅ User input area
-    user_input = st.text_input("You:", key="user_input")
-
-    if user_input:
-        # Save user message
-        st.session_state.messages.append(("user", user_input))
-
-        # Find response (case-insensitive)
-        lower_input = user_input.lower()
-        bot_reply = responses.get(lower_input, "I'm not sure how to respond to that, but I'm here to listen!")
-
-        # Save bot reply
-        st.session_state.messages.append(("bot", bot_reply))
-
-        # Clear input field
+    # Session state init
+    if 'chat_history' not in st.session_state:
+        st.session_state.chat_history = []
+    if 'user_input' not in st.session_state:
         st.session_state.user_input = ""
 
-    # ✅ Display chat history
-    for sender, msg in st.session_state.messages:
-        if sender == "user":
-            st.markdown(f"**You:** {msg}")
-        else:
-            st.markdown(f"**PsychBot:** {msg}")
+    # Input
+    user_input = st.text_input("You:", key="user_input")
+
+    # Handle user message
+    if user_input:
+        st.session_state.chat_history.append(("You", user_input))
+
+        # Bot response
+        bot_response = generate_response(user_input)
+        st.session_state.chat_history.append(("Therabot", bot_response))
+        st.session_state.user_input = ""
+
+    # Chat display
+    st.write("### 💬 Conversation")
+    for sender, message in st.session_state.chat_history:
+        st.markdown(f"**{sender}:** {message}")
+
+    # Extra support sections
+    st.divider()
+    show_coping_strategies()
+    show_relaxation_exercises()
+
+    # Reset button
+    if st.button("🗑️ Reset Conversation"):
+        st.session_state.chat_history = []
