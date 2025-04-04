@@ -27,34 +27,45 @@ def get_response(user_input):
     """Get a response based on user input."""
     user_input = user_input.lower()
     for intent, data in intents.items():
+        if intent == "default":
+            continue  # Skip default for now
         if any(pattern in user_input for pattern in data["patterns"]):
-            return st.session_state.chat_history.append(f"Bot: {st.session_state.chat_history.append(data['responses'][0])}")
-    return intents["default"]["responses"][0]
+            return data["responses"][0]  # Return first matched response
+    return intents["default"]["responses"][0]  # Default fallback response
 
-def main():
-    # Initialize session state variables if they don't exist
+def chatbot():
+    # Initialize session state
     if 'user_input' not in st.session_state:
         st.session_state.user_input = ""
     if 'chat_history' not in st.session_state:
         st.session_state.chat_history = []
 
-    # Streamlit app layout
-    st.title("Simple Rule-Based Chatbot")
-    st.write("Chat History:")
-    for chat in st.session_state.chat_history:
-        st.write(chat)
+    st.title("🤖 Simple Mental Health Chatbot")
 
-    # User input
-    user_input = st.text_input("You:", value=st.session_state.user_input)
+    # Display chat history
+    st.write("### 💬 Chat History")
+    for chat in st.session_state.chat_history:
+        st.markdown(chat)
+
+    # Input from user
+    user_input = st.text_input("You:", value=st.session_state.user_input, key="user_input")
 
     if st.button("Send"):
-        # Store user input in session state
-        st.session_state.chat_history.append(f"You: {user_input}")
-        st.session_state.user_input = ""  # Clear input after sending
+        if user_input.strip():
+            # Store user message
+            st.session_state.chat_history.append(f"**You:** {user_input}")
 
-        # Get chatbot response
-        response = get_response(user_input)
-        st.session_state.chat_history.append(f"Bot: {response}")
+            # Generate and store bot response
+            response = get_response(user_input)
+            st.session_state.chat_history.append(f"**Bot:** {response}")
 
+            # Clear the input field
+            st.session_state.user_input = ""
+
+    # Reset button
+    if st.button("🔄 Reset Chat"):
+        st.session_state.chat_history = []
+
+# Make it runnable directly
 if __name__ == "__main__":
-    main()
+    chatbot()
